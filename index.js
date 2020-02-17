@@ -6,6 +6,10 @@ app.get('/', (req, res) => {
     res.send("Server is running")
 })
 
+app.get('/test', (req, res) => {
+    res.send("Testing")
+})
+
 socketio.on("connection", (userSocket) => {
     userSocket.on("send_message", (data) => {
         console.log("Send Message " )
