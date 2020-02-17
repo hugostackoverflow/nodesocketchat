@@ -6,9 +6,15 @@ app.get('/', (req, res) => {
     res.send("Server is running")
 })
 
-app.get('/test', (req, res) => {
+app.get('/getfile', function(req, res) {
+    console.log(req.params);
+    var _class = req.params.class;
     res.send("Testing")
 })
+
+app.use(function(req, res, next) {
+    res.status(404).send("Sorry, that route doesn't exist. Have a nice day :)");
+});
 
 socketio.on("connection", (userSocket) => {
     userSocket.on("send_message", (data) => {
@@ -33,3 +39,8 @@ http.listen(app.get('port'),
   function(){
     console.log("Express server listening on port " + app.get('port'));
 });
+
+
+function readFile(file){
+
+}
