@@ -4,11 +4,17 @@ const socketio = require('socket.io')(http)
 const csvjson = require('csvjson');
 const readFile = require('fs').readFile;
 const fs = require('fs');
+var path = require('path');
+
 const allGroups = [];
 
+
 app.get('/', (req, res) => {
-    res.send("Server is running")
+  
+    res.sendFile(path.join(__dirname + '/index.html'));
 })
+
+
 
 app.get('/getfile/', function(req, res) {
     console.log(JSON.stringify(req.query.group));
@@ -25,27 +31,18 @@ app.get('/getlist/', function(req, res) {
     //res.send("Testing" + listallfiles())
 })
 
+app.get('/writelist/', function(req, res) {
+
+    writeJson(res);
+
+    //res.send("Testing" + listallfiles())
+})
+
 
 app.use(function(req, res, next) {
     res.status(404).send("Sorry, that route doesn't exist. Have a nice day :)");
 });
 
-socketio.on("connection", (userSocket) => {
-    userSocket.on("send_message", (data) => {
-        console.log("Send Message " )
-        userSocket.broadcast.emit("receive_message", data)
-    })
-
-    userSocket.on("typing", (data) => {
-        console.log("Typing" )
-        userSocket.broadcast.emit("typing", data)
-    })
-
-    userSocket.on("stop_typing", (data) => {
-        console.log("Stop" )
-        userSocket.broadcast.emit("stop_typing", data)
-    })
-})
 
 //http.listen(process.env.PORT)
 app.set('port', process.env.PORT || 3000);
@@ -62,18 +59,40 @@ csvToJson(file)
 }
 
 function csvToJson(file,res){
+    res.setHeader('Content-Type', 'application/json');
+    var data = {
+        'Subject': 'ERROR',
+        'Start Date': '30.09.2019',
+        'Start Time': '11:10',
+        'End Date': '30.09.2019',
+        'End Time': '12:00',
+        'Description': 'BBA 3 - K1',
+        'Location': '',
+        '': ''
+      };
     console.log(file);
-    readFile('./f_schedules/'+file+'.csv', 'utf-8', (err, fileContent) => {
-        if(err) {
-            console.log(err); // Do something to handle the error or just throw it
-            res.send(err)
-            throw new Error(err);
-        }
-        const jsonObj = csvjson.toObject(fileContent);
-        console.log(jsonObj);
-        res.setHeader('Content-Type', 'application/json');
-        res.send(jsonObj)
-    });
+
+    if(typeof file === "undefined" || file === null){
+        res.send(JSON.stringify("Wrong Values"));
+    }else{
+        try{
+            readFile('./f_schedules/'+file+'.csv', 'utf-8', (err, fileContent) => {
+                if(err) {
+                    //console.log(err); // Do something to handle the error or just throw it
+                    res.send(JSON.stringify(data))
+                // throw new Error(err);
+                }
+                const jsonObj = csvjson.toObject(fileContent);
+                console.log(jsonObj);
+                
+                res.send(jsonObj)
+            });
+            }
+            catch{
+                res.send(JSON.stringify(data)) 
+            }
+    }
+        
 }
 
 function listallfiles(res){
@@ -85,11 +104,32 @@ function listallfiles(res){
          arr.push(file);
         console.log(file);
       });
+      res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify(arr));
     });
 }
 
 
+function writeJson(res){
+   // console.log(res);
+    fs.readFile('myjsonfile.json', 'utf8', function readFileCallback(err, data){
+        if (err){
+            console.log("ERROR: "+err);
+        } else {
+            console.log(data);
+        obj = JSON.parse(data); //now it an object
+        obj.push({id: 2, square:3}); //add some data
+        json = JSON.stringify(obj); //convert it back to json
+        fs.writeFile('myjsonfile.json', json, 'utf8', function(){
+            console.log("done");
+            res.setHeader('Content-Type', 'application/json');
+            res.send(json);
+        }); // write it back 
+    }});
+}
+function hello(){
+    console.log("finish");
+}
 function printFiles(files){
    // allGroups = files;
     console.log(files[0]);
